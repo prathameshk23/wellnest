@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wellcare/modules/dashboard/dashboard_module.dart';
 import 'package:wellcare/modules/dashboard/screens/gratitude_screen.dart';
+import 'package:wellcare/modules/dashboard/screens/health_check_in_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/other_factors_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/sleep_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/symptoms_screen.dart';
@@ -392,6 +393,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const CustomCard(
                           cardEmoji: "😴",
                           cardTitle: "Sleep",
+                        ),
+                      ),
+                                            GestureDetector(
+                        onTap: () {
+                          Modular.to.pushNamed(HealthCheckInScreen.toRoute);
+                        },
+                        child: const CustomCard(
+                          cardEmoji: "💜",
+                          cardTitle: "Check-in",
                         ),
                       ),
                     ],

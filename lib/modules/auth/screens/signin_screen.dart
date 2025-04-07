@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wellcare/modules/auth/screens/signup_screen.dart';
-import 'package:wellcare/modules/dashboard/dashboard_widget.dart';
 import 'package:wellcare/modules/dashboard/screens/dashboard_screen.dart';
-import 'package:wellcare/modules/dashboard/screens/navigation.dart';
 import 'package:wellcare/resources/r.dart';
+import 'package:wellcare/utils/logger.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 import 'package:wellcare/widgets/custom_textfield.dart';
 
@@ -17,6 +18,37 @@ class SigninScreen extends StatefulWidget {
 
   @override
   State<SigninScreen> createState() => _SigninScreenState();
+}
+
+final supabase = Supabase.instance.client;
+
+Future<void> signInUser() async {
+  try {
+    final AuthResponse res = await supabase.auth.signInWithPassword(
+        email: 'prathamz2301@gmail.com', password: 'Pratham@2301');
+
+    Fluttertoast.showToast(
+      msg: "Signup successful!",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+    );
+    logger.d(res.user?.id);
+    Modular.to.pushNamed(DashboardScreen.toRoute);
+  } catch (e) {
+    if (e is AuthException) {
+      Fluttertoast.showToast(
+        msg: e.message,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "An unexpected error occurred",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    }
+  }
 }
 
 class _SigninScreenState extends State<SigninScreen> {
@@ -66,8 +98,7 @@ class _SigninScreenState extends State<SigninScreen> {
             ),
             CustomButton(
               goTo: () {
-                Modular.to.pushNamedAndRemoveUntil(
-                    DashboardScreen.toRoute, (route) => false);
+                signInUser();
               },
               buttonText: "SIGNIN",
               buttonWidth: double.infinity,

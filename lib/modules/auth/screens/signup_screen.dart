@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wellcare/modules/auth/auth_module.dart';
 import 'package:wellcare/modules/auth/screens/user_setup_screen.dart';
 import 'package:wellcare/resources/r.dart';
@@ -20,6 +22,39 @@ class SignupScreen extends StatefulWidget {
 }
 
 enum Gender { male, female, other }
+
+final supabase = Supabase.instance.client;
+
+Future<void> signUpNewUser() async {
+  try {
+    final AuthResponse res = await supabase.auth.signUp(
+      email: 'prathamz2301@gmail.com',
+      password: 'Pratham@2301',
+    );
+
+    Fluttertoast.showToast(
+      msg: "Signup successful!",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+    );
+    logger.d(res.user?.id);
+    Modular.to.pushNamed(UserSetupScreen.toRoute);
+  } catch (e) {
+    if (e is AuthException) {
+      Fluttertoast.showToast(
+        msg: e.message,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "An unexpected error occurred",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    }
+  }
+}
 
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _nameController = TextEditingController();
@@ -197,7 +232,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 CustomButton(
                   goTo: () {
-                    Modular.to.pushNamed(UserSetupScreen.toRoute);
+                    signUpNewUser();
                   },
                   buttonText: "SIGNUP",
                   buttonWidth: double.infinity,

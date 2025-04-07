@@ -1,6 +1,7 @@
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:wellcare/modules/dashboard/dashboard_widget.dart';
 import 'package:wellcare/modules/dashboard/screens/gratitude_screen.dart';
+import 'package:wellcare/modules/dashboard/screens/health_check_in_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/home_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/other_factors_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/sleep_screen.dart';
@@ -36,6 +37,10 @@ class DashboardModule extends Module {
     r.child(
       SleepScreen.linkRoute,
       child: (context) => const SleepScreen(),
+    );
+    r.child(
+      HealthCheckInScreen.linkRoute,
+      child: (context) => const HealthCheckInScreen(),
     );
   }
 }
