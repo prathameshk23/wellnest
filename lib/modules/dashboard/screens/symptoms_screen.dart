@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:wellcare/models/user_symptoms.dart';
 import 'package:wellcare/modules/dashboard/dashboard_module.dart';
 import 'package:wellcare/modules/dashboard/widget/activity_slider.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
+
+import '../../../models/symptoms_track.dart';
+import '../../../store/app_store.dart';
+import '../../../utils/logger.dart';
+import '../services/dash_services.dart';
+
+final kToday = DateTime.now();
 
 class SymptomsScreen extends StatefulWidget {
   const SymptomsScreen({super.key});
@@ -17,6 +27,33 @@ class SymptomsScreen extends StatefulWidget {
 }
 
 class _SymptomsScreenState extends State<SymptomsScreen> {
+  final kDay = DateTime(kToday.year, kToday.month, kToday.day);
+  List<UserSymptoms> symptoms = [];
+  List<SymptomsTrack> symptomsTrack = [];
+  List<Map<String, dynamic>> updates = [];
+  final AppStore store = Modular.get<AppStore>();
+  DashServices apiServices = DashServices();
+  @override
+  void initState() {
+    super.initState();
+    if (store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)) {
+      print(true);
+    } else {
+      print(false);
+    }
+    getSymptoms();
+    // logger.i(symptoms);
+    // conditions = symptoms.map((e) => e.name).toList();
+  }
+
+  Future<void> getSymptoms() async {
+    symptoms = await apiServices.getUserSymptoms(store.user.id);
+    symptomsTrack = await apiServices.getSymptomsTrack(store.user.id);
+    // conditions = symptoms.map((e) => e.name).toList();
+    logger.i(symptoms);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +115,8 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Today",
+                          DateFormat.yMMMMd('en_US')
+                              .format(DateTime.parse(store.selectedDate)),
                           style: GoogleFonts.publicSans(
                             fontSize: 40,
                             fontWeight: FontWeight.w700,
@@ -123,36 +161,85 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
                       SizedBox(
                         height: MediaQuery.of(context).size.height * 0.3,
                         child: SingleChildScrollView(
-                          child: Column(
-                            children: List.generate(
-                              6, // Adjust the number of sliders as needed
-                              (index) => ActivitySlider(
-                                sliderLabel: "Headache",
-                                value: 3,
-                                onChanged: (value) {},
-                              ),
-                            ),
-                          ),
+                          child: symptoms.isEmpty
+                              ? const Text("Loading....")
+                              : Column(
+                                  children: List.generate(
+                                    symptoms.length,
+                                    (index) {
+                                      final symptomId = symptoms[index].id;
+
+                                      // Find the matching symptom track value using userSymptomId
+                                      final matchedTrack =
+                                          symptomsTrack.firstWhere(
+                                        (track) =>
+                                            track.userSymptomId == symptomId,
+                                        orElse: () => SymptomsTrack(
+                                          value: "0",
+                                          id: '',
+                                          date: DateTime.now(),
+                                          userSymptomId: '',
+                                          userId: '',
+                                        ),
+                                      );
+
+                                      final sliderValue =
+                                          int.tryParse(matchedTrack.value) ?? 0;
+
+                                      return ActivitySlider(
+                                        sliderLabel:
+                                            symptoms[index].symptom.name,
+                                        value: sliderValue,
+                                        onChanged: (value) {
+                                          final symptomId = symptoms[index].id;
+
+                                          // Remove any existing entry with the same userSymptomId
+                                          updates.removeWhere((update) =>
+                                              update["userSymptomId"] ==
+                                              symptomId);
+
+                                          // Add the updated entry
+                                          updates.add({
+                                            "value": value,
+                                            'date': DateFormat('yyyy-MM-dd')
+                                                .format(kDay),
+                                            "userSymptom": symptoms[index].id,
+                                            "user": symptoms[index].userId,
+                                          });
+                                          logger.i(updates);
+                                          // Handle slider value change here
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Text("Scroll to see more symptoms"),
+              // const Text("Scroll to see more symptoms"),
               const Spacer(),
-              CustomButton(
-                elevation: 0,
-                rounded: 50,
-                buttonText: "Done",
-                buttonWidth: double.infinity,
-                buttonColor: R.colors.bgPrimary,
-                textStyle: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: R.colors.black,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)
+                  ? CustomButton(
+                      goTo: () async {
+                        for (var i in updates) {
+                          await apiServices.postSymptomsTrack(i);
+                        }
+                      },
+                      elevation: 0,
+                      rounded: 50,
+                      buttonText: "Done",
+                      buttonWidth: double.infinity,
+                      buttonColor: R.colors.bgPrimary,
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: R.colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  : SizedBox(),
             ],
           ),
         ],

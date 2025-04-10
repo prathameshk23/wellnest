@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:wellcare/modules/auth/screens/login_signup_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/home_screen.dart';
@@ -182,6 +183,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onDaySelected: (selectedDay, focusedDay) {
                           setState(() {
                             _selectedDay = selectedDay;
+                            store.selectedDate =
+                                DateFormat('yyyy-MM-dd').format(selectedDay);
                             _focusedDay = focusedDay;
                           });
                         },

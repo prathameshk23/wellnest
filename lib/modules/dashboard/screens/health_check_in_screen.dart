@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:wellcare/modules/dashboard/dashboard_module.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 import 'package:wellcare/widgets/custom_textfield.dart';
+
+import '../../../models/health.dart';
+import '../../../store/app_store.dart';
+import '../services/dash_services.dart';
+
+final kToday = DateTime.now();
 
 class HealthCheckInScreen extends StatefulWidget {
   const HealthCheckInScreen({super.key});
@@ -18,6 +26,36 @@ class HealthCheckInScreen extends StatefulWidget {
 }
 
 class _HealthCheckInScreenState extends State<HealthCheckInScreen> {
+  final kDay = DateTime(kToday.year, kToday.month, kToday.day);
+  List<Health> health = [];
+  TextEditingController stepCount = TextEditingController(text: "");
+  TextEditingController weight = TextEditingController(text: "");
+  TextEditingController heartRate = TextEditingController(text: "");
+  TextEditingController calorieIntake = TextEditingController(text: "");
+  final AppStore store = Modular.get<AppStore>();
+  DashServices apiServices = DashServices();
+
+  void initState() {
+    super.initState();
+    if (store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)) {
+      print(true);
+    } else {
+      print(false);
+    }
+    getSymptoms();
+    // logger.i(symptoms);
+    // conditions = symptoms.map((e) => e.name).toList();
+  }
+
+  Future<void> getSymptoms() async {
+    health = await apiServices.getHealth(store.user.id);
+    stepCount = TextEditingController(text: health[0].stepCount);
+    weight = TextEditingController(text: health[0].weight);
+    calorieIntake = TextEditingController(text: health[0].calorieIntake);
+    heartRate = TextEditingController(text: health[0].heartRate);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,7 +117,8 @@ class _HealthCheckInScreenState extends State<HealthCheckInScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Today",
+                          DateFormat.yMMMMd('en_US')
+                              .format(DateTime.parse(store.selectedDate)),
                           style: GoogleFonts.publicSans(
                             fontSize: 40,
                             fontWeight: FontWeight.w700,
@@ -131,22 +170,22 @@ class _HealthCheckInScreenState extends State<HealthCheckInScreen> {
                             children: [
                               CustomTextField(
                                 labelText: "Step Count",
-                                controller: TextEditingController(),
+                                controller: stepCount,
                               ),
                               const SizedBox(height: 8),
                               CustomTextField(
                                 labelText: "Weight",
-                                controller: TextEditingController(),
+                                controller: weight,
                               ),
                               const SizedBox(height: 8),
                               CustomTextField(
                                 labelText: "Heart Rate",
-                                controller: TextEditingController(),
+                                controller: heartRate,
                               ),
                               const SizedBox(height: 8),
                               CustomTextField(
                                 labelText: "Calorie Intake",
-                                controller: TextEditingController(),
+                                controller: calorieIntake,
                               )
                             ],
                           )),
@@ -157,18 +196,31 @@ class _HealthCheckInScreenState extends State<HealthCheckInScreen> {
                 ),
               ),
               const Spacer(),
-              CustomButton(
-                elevation: 0,
-                rounded: 50,
-                buttonText: "Done",
-                buttonWidth: double.infinity,
-                buttonColor: R.colors.bgPrimary,
-                textStyle: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: R.colors.black,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)
+                  ? CustomButton(
+                      goTo: () async {
+                        var body = {
+                          "step_count": stepCount.text,
+                          "weight": weight.text,
+                          "heart_rate": heartRate.text,
+                          "calories_intake": calorieIntake.text,
+                          "date": DateFormat('yyyy-MM-dd').format(kDay),
+                          'user': store.user.id
+                        };
+                        await apiServices.postHealth(body);
+                      },
+                      elevation: 0,
+                      rounded: 50,
+                      buttonText: "Done",
+                      buttonWidth: double.infinity,
+                      buttonColor: R.colors.bgPrimary,
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: R.colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  : SizedBox(),
             ],
           ),
         ],

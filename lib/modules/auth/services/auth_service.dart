@@ -9,7 +9,7 @@ import '../../../store/app_store.dart';
 import '../../../utils/logger.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 
-const baseUrl = "https://867a-103-173-195-212.ngrok-free.app";
+const baseUrl = "https://bd8d-103-173-195-212.ngrok-free.app";
 late String endPoint;
 final AppStore store = Modular.get<AppStore>();
 

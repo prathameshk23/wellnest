@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:wellcare/modules/dashboard/dashboard_module.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
+
+import '../../../models/sleep_track.dart';
+import '../../../store/app_store.dart';
+import '../services/dash_services.dart';
+
+final kToday = DateTime.now();
 
 class SleepScreen extends StatefulWidget {
   const SleepScreen({super.key});
@@ -16,11 +24,37 @@ class SleepScreen extends StatefulWidget {
 }
 
 class _SleepScreenState extends State<SleepScreen> {
+  final kDay = DateTime(kToday.year, kToday.month, kToday.day);
+  List<SleepTrack> sleepTrack = [];
   int? selectedQuality;
   int sleepTime = 0;
   String? selectedFactor;
+  final AppStore store = Modular.get<AppStore>();
+  DashServices apiServices = DashServices();
+
+  void initState() {
+    super.initState();
+    if (store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)) {
+      print(true);
+    } else {
+      print(false);
+    }
+    getSymptoms();
+    // logger.i(symptoms);
+    // conditions = symptoms.map((e) => e.name).toList();
+  }
+
+  Future<void> getSymptoms() async {
+    sleepTrack = await apiServices.getSleepTrack(store.user.id);
+    selectedQuality = int.tryParse(sleepTrack[0].sleepQuality);
+    // selectedFactor = sleepTrack[0].sleepFacrtor;
+    sleepTime = int.tryParse(sleepTrack[0].sleepTime)!;
+    toggleFactor(sleepTrack[0].sleepFacrtor);
+    setState(() {});
+  }
 
   void toggleFactor(String factor) {
+    print(factor);
     setState(() {
       if (selectedFactor == factor) {
         selectedFactor = null;
@@ -91,7 +125,8 @@ class _SleepScreenState extends State<SleepScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Today",
+                          DateFormat.yMMMMd('en_US')
+                              .format(DateTime.parse(store.selectedDate)),
                           style: GoogleFonts.publicSans(
                             fontSize: 40,
                             fontWeight: FontWeight.w700,
@@ -200,7 +235,7 @@ class _SleepScreenState extends State<SleepScreen> {
                     ),
                     Wrap(
                       spacing: 10,
-                      children: ["Early bedtime", "Late bedtime"].map((factor) {
+                      children: ["Early Bedtime", "Late Bedtime"].map((factor) {
                         return ElevatedButton(
                           onPressed: () => toggleFactor(factor),
                           style: ElevatedButton.styleFrom(
@@ -223,18 +258,30 @@ class _SleepScreenState extends State<SleepScreen> {
                 ),
               ),
               const Spacer(),
-              CustomButton(
-                elevation: 0,
-                rounded: 50,
-                buttonText: "Done",
-                buttonWidth: double.infinity,
-                buttonColor: R.colors.bgPrimary,
-                textStyle: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: R.colors.black,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)
+                  ? CustomButton(
+                      goTo: () async {
+                        var body = {
+                          "sleep_quality": selectedQuality,
+                          "sleep_factor": selectedFactor,
+                          "sleep_time": sleepTime,
+                          'date': DateFormat('yyyy-MM-dd').format(kDay),
+                          "user": store.user.id
+                        };
+                        await apiServices.postSleepTrack(body);
+                      },
+                      elevation: 0,
+                      rounded: 50,
+                      buttonText: "Done",
+                      buttonWidth: double.infinity,
+                      buttonColor: R.colors.bgPrimary,
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: R.colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  : SizedBox(),
             ],
           ),
         ],

@@ -4,6 +4,8 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:wellcare/models/mood_track.dart';
 import 'package:wellcare/modules/dashboard/dashboard_module.dart';
 import 'package:wellcare/modules/dashboard/screens/gratitude_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/health_check_in_screen.dart';
@@ -14,6 +16,9 @@ import 'package:wellcare/modules/dashboard/widget/custom_card.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/utils/logger.dart';
 import 'package:wellcare/widgets/custom_button.dart';
+
+import '../../../store/app_store.dart';
+import '../services/dash_services.dart';
 
 final List<String> mood = [
   "Happy",
@@ -30,6 +35,8 @@ final List<String> mood = [
   "Energetic",
 ];
 
+final kToday = DateTime.now();
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -41,7 +48,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final kDay = DateTime(kToday.year, kToday.month, kToday.day);
   Map<String, bool> selectedMood = {};
+  List<MoodTrack> moodTrack = [];
 
   int _selectedMoodIndex = 0;
   final PageController _pageController = PageController(
@@ -56,8 +65,49 @@ class _HomeScreenState extends State<HomeScreen> {
     {"svg": R.assets.happyIcon, "color": R.colors.blue500},
     {"svg": R.assets.excitedIcon, "color": R.colors.blue500},
   ];
+  final AppStore store = Modular.get<AppStore>();
+  DashServices apiServices = DashServices();
+  @override
+  void initState() {
+    super.initState();
+    if (store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)) {
+      print(true);
+    } else {
+      print(false);
+    }
+    getSymptoms();
+    // logger.i(symptoms);
+    // conditions = symptoms.map((e) => e.name).toList();
+  }
+
+  //
+  Future<void> getSymptoms() async {
+    moodTrack = await apiServices.getMoodTrack(store.user.id);
+    // symptomsTrack = await apiServices.getSymptomsTrack(store.user.id);
+
+    // Set the selected mood index from moodTrack data
+    _selectedMoodIndex = int.tryParse(
+          moodTrack.isNotEmpty ? moodTrack.first.value : '0',
+        ) ??
+        0;
+
+    // Set the selected mood tags from moodTrack data
+    if (moodTrack.isNotEmpty && moodTrack.first.moods != null) {
+      for (String tag in moodTrack.first.moods!) {
+        selectedMood[tag] = true;
+      }
+    }
+
+    // logger.i(otherTrack);
+    setState(() {});
+  }
 
   void _showMoodPicker() {
+    // Set the page controller to the selected mood index
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pageController.jumpToPage(_selectedMoodIndex);
+    });
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -243,6 +293,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: R.colors.black,
                         fontWeight: FontWeight.w700,
                       ),
+                      goTo: () async {
+                        var body = {
+                          "value": _selectedMoodIndex,
+                          "moods": selectedMood.entries
+                              .where((entry) => entry.value == true)
+                              .map((entry) => entry.key)
+                              .toList(),
+                          "date": DateFormat('yyyy-MM-dd').format(kDay),
+                          'user': store.user.id
+                        };
+                        await apiServices.postMoodTrack(body);
+                      },
+                      // onPressed: () {
+                      //   // Save the selected mood and tags
+                      //   Navigator.pop(context);
+                      // },
                     ),
                   ],
                 ),
@@ -252,7 +318,8 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     ).whenComplete(() {
-      _selectedMoodIndex = 0;
+      // Don't reset the _selectedMoodIndex to preserve the selection
+      // _selectedMoodIndex = 0;
     });
   }
 
@@ -317,7 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Today",
+                          DateFormat.yMMMMd('en_US')
+                              .format(DateTime.parse(store.selectedDate)),
                           style: GoogleFonts.publicSans(
                             fontSize: 40,
                             fontWeight: FontWeight.w700,
@@ -395,7 +463,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           cardTitle: "Sleep",
                         ),
                       ),
-                                            GestureDetector(
+                      GestureDetector(
                         onTap: () {
                           Modular.to.pushNamed(HealthCheckInScreen.toRoute);
                         },

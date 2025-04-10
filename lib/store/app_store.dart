@@ -45,4 +45,7 @@ abstract class _AppStore with Store {
 
   @observable
   late User user;
+
+  @observable
+  String selectedDate = "";
 }

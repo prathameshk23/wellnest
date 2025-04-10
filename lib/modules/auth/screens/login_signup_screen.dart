@@ -8,6 +8,10 @@ import 'package:wellcare/modules/auth/screens/signup_screen.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
+import '../../../utils/logger.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
+import '../services/auth_service.dart';
+
 class SignUpLoginScreen extends StatefulWidget {
   const SignUpLoginScreen({super.key});
 
@@ -19,6 +23,25 @@ class SignUpLoginScreen extends StatefulWidget {
 }
 
 class _SignUpLoginScreenState extends State<SignUpLoginScreen> {
+  final supabase = Supabase.instance.client;
+  AuthServices apiServices = AuthServices();
+
+  @override
+  void initState() {
+    super.initState();
+    checkUser();
+  }
+
+  Future<void> checkUser() async {
+    final Session? session = supabase.auth.currentSession;
+    logger.i(session);
+    if (session != null) {
+      var authId = session.user.id;
+      var response = await apiServices.getUser(authId);
+      Modular.to.pushNamed(DashboardScreen.toRoute);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

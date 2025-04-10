@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:wellcare/models/medicine.dart';
 import 'package:wellcare/modules/dashboard/dashboard_module.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
+
+import '../../../store/app_store.dart';
+import '../../../utils/logger.dart';
+import '../services/dash_services.dart';
 
 class GratitudeScreen extends StatefulWidget {
   const GratitudeScreen({super.key});
@@ -16,6 +23,76 @@ class GratitudeScreen extends StatefulWidget {
 }
 
 class _GratitudeScreenState extends State<GratitudeScreen> {
+  final TextEditingController _medicineController = TextEditingController();
+  final TextEditingController _dosageController = TextEditingController();
+  final AppStore store = Modular.get<AppStore>();
+  final DashServices apiServices = DashServices();
+  List<Medicine> medicineList = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchMedicines();
+  }
+
+  @override
+  void dispose() {
+    _medicineController.dispose();
+    _dosageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> fetchMedicines() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final data = await apiServices.getMedicine(store.user.id);
+      medicineList = data;
+      logger.i("Fetched ${medicineList.length} medicines");
+    } catch (e) {
+      logger.e("Error fetching medicines: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _addMedicine() async {
+    if (_medicineController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a medicine name")),
+      );
+      return;
+    }
+
+    final medicine = {
+      "name": _medicineController.text.trim(),
+      "dosage": _dosageController.text.trim(),
+      "date": DateFormat('yyyy-MM-dd').format(DateTime.now()),
+      "user": store.user.id,
+    };
+
+    try {
+      await apiServices.postMedicine(medicine);
+      _medicineController.clear();
+      _dosageController.clear();
+      await fetchMedicines();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Medicine added successfully")),
+      );
+    } catch (e) {
+      logger.e("Error adding medicine: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to add medicine")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +154,8 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Today",
+                          DateFormat.yMMMMd('en_US')
+                              .format(DateTime.parse(store.selectedDate)),
                           style: GoogleFonts.publicSans(
                             fontSize: 40,
                             fontWeight: FontWeight.w700,
@@ -93,7 +171,7 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
                 height: 60,
               ),
               Text(
-                "Gratitude",
+                "Medicine Tracker",
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -119,24 +197,23 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Section with Close Button
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.lightBlue.shade50,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.circle,
-                                    size: 10, color: Colors.blue),
-                                SizedBox(width: 8),
+                                Icon(Icons.medication,
+                                    size: 16, color: Colors.blue),
+                                const SizedBox(width: 8),
                                 Text(
-                                  "I'm grateful for...",
-                                  style: TextStyle(
+                                  "Medicine I took...",
+                                  style: GoogleFonts.plusJakartaSans(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -146,25 +223,75 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      // Text Field
-                      const TextField(
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _medicineController,
                         decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "Maybe a person or moment",
-                          hintStyle: TextStyle(color: Colors.grey),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          labelText: "Medicine Name",
+                          hintText: "Enter medicine name",
                         ),
-                        maxLines: 1,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _dosageController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          labelText: "Dosage",
+                          hintText: "E.g., 10mg, 1 pill",
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Spacer(),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : medicineList.isEmpty
+                          ? Center(
+                              child: Text(
+                                "No medicines added yet",
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: medicineList.length,
+                              itemBuilder: (context, index) {
+                                final medicine = medicineList[index];
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ListTile(
+                                    leading: const CircleAvatar(
+                                      child: Icon(Icons.medication_outlined),
+                                    ),
+                                    title: Text(medicine.name ?? ""),
+                                    subtitle: Text(medicine.dosage ?? ""),
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+              ),
               CustomButton(
+                goTo: _addMedicine,
                 elevation: 0,
                 rounded: 50,
-                buttonText: "Done",
+                buttonText: "Add Medicine",
                 buttonWidth: double.infinity,
                 buttonColor: R.colors.bgPrimary,
                 textStyle: GoogleFonts.inter(
