@@ -7,6 +7,8 @@ import 'package:wellcare/modules/auth/screens/companion_screen.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
+import '../../../store/app_store.dart';
+
 class AdoptScreen extends StatefulWidget {
   const AdoptScreen({super.key});
 
@@ -18,6 +20,9 @@ class AdoptScreen extends StatefulWidget {
 }
 
 class _AdoptScreenState extends State<AdoptScreen> {
+  final AppStore store = Modular.get<AppStore>();
+  final TextEditingController _pandaController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,6 +114,7 @@ class _AdoptScreenState extends State<AdoptScreen> {
                 ),
                 Expanded(
                   child: TextField(
+                    controller: _pandaController,
                     cursorColor: R.colors.green200,
                     decoration: InputDecoration(
                       hintText: "Name",
@@ -131,6 +137,7 @@ class _AdoptScreenState extends State<AdoptScreen> {
                 const Spacer(),
                 CustomButton(
                   goTo: () {
+                    store.panda = _pandaController.text;
                     Modular.to.pushNamed(CompanionScreen.toRoute);
                   },
                   elevation: 0,

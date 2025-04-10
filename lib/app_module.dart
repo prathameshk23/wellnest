@@ -5,9 +5,13 @@ import 'package:wellcare/modules/auth/auth_module.dart';
 import 'package:wellcare/modules/dashboard/dashboard_module.dart';
 import 'package:wellcare/modules/welcome/welcome_module.dart';
 
+import 'store/app_store.dart';
+
 class AppModule extends Module {
   @override
-  void binds(i) {}
+  void binds(i) {
+    i.addSingleton<AppStore>(() => AppStore());
+  }
 
   // add module routes into the routes scope
   @override

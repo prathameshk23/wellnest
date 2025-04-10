@@ -11,6 +11,8 @@ import 'package:wellcare/modules/dashboard/screens/home_screen.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
+import '../../../store/app_store.dart';
+
 final kToday = DateTime.now();
 
 class DashboardScreen extends StatefulWidget {
@@ -24,9 +26,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final AppStore store = Modular.get<AppStore>();
   final CalendarFormat _calendarFormat = CalendarFormat.month;
   final kFirstDay = DateTime(kToday.year - 10, kToday.month - 3, kToday.day);
-  final kLastDay = DateTime(kToday.year + 10, kToday.month + 3, kToday.day);
+  final kLastDay = DateTime(kToday.year, kToday.month, kToday.day);
   DateTime _focusedDay = kToday;
   DateTime? _selectedDay;
   @override
@@ -41,6 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Scaffold(
         backgroundColor: R.colors.white,
         appBar: AppBar(
+          title: Text("Welcome ${store.user.name}"),
           leading: IconButton(
             icon: const Icon(
               Icons.settings_outlined,

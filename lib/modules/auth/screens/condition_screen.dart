@@ -6,32 +6,37 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:wellcare/modules/auth/auth_module.dart';
 import 'package:wellcare/modules/auth/screens/adopt_screen.dart';
 import 'package:wellcare/resources/r.dart';
+import 'package:wellcare/store/app_store.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
-final List<String> conditions = [
-  "Anxiety",
-  "Headache",
-  "Migraine",
-  "Stress",
-  "Fatigue",
-  "Depression",
-  "Muscle Pain",
-  "Joint Pain",
-  "Nausea",
-  "Dizziness",
-  "Chest Pain",
-  "Stomach Pain",
-  "Back Pain",
-  "Heartburn",
-  "Menstrual Cramps",
-  "Tension Headache",
-  "Neck Pain",
-  "Skin Irritation",
-  "Burning Sensation",
-  "Restless Legs",
-  "Shivering/Chills",
-  "Breathing Difficulty",
-];
+import '../../../models/conditions.dart';
+import '../../../utils/logger.dart';
+import '../services/auth_service.dart';
+
+// final List<String> conditions = [
+//   "Anxiety",
+//   "Headache",
+//   "Migraine",
+//   "Stress",
+//   "Fatigue",
+//   "Depression",
+//   "Muscle Pain",
+//   "Joint Pain",
+//   "Nausea",
+//   "Dizziness",
+//   "Chest Pain",
+//   "Stomach Pain",
+//   "Back Pain",
+//   "Heartburn",
+//   "Menstrual Cramps",
+//   "Tension Headache",
+//   "Neck Pain",
+//   "Skin Irritation",
+//   "Burning Sensation",
+//   "Restless Legs",
+//   "Shivering/Chills",
+//   "Breathing Difficulty",
+// ];
 
 class ConditionScreen extends StatefulWidget {
   const ConditionScreen({super.key});
@@ -45,7 +50,28 @@ class ConditionScreen extends StatefulWidget {
 
 class _ConditionScreenState extends State<ConditionScreen> {
   Map<String, bool> selectedCondition = {};
+  final AppStore store = Modular.get<AppStore>();
   final int maxSelections = 6;
+  final List<String> conditions = [];
+  List<Symptoms> symptoms = [];
+  AuthServices apiServices = AuthServices();
+
+  void initState() {
+    super.initState();
+    getSymptoms();
+    // logger.i(symptoms);
+    // conditions = symptoms.map((e) => e.name).toList();
+  }
+
+  Future<void> getSymptoms() async {
+    symptoms = await apiServices.getAllSymptoms();
+    // conditions = symptoms.map((e) => e.name).toList();
+    setState(() {});
+  }
+
+  // Future<Symptoms> getSymptoms() async {
+  //   symptoms = await apiServices.getAllSymptoms();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -137,63 +163,78 @@ class _ConditionScreenState extends State<ConditionScreen> {
                 const SizedBox(
                   height: 30,
                 ),
-                Wrap(
-                  spacing: 8, // Horizontal spacing between chips
-                  runSpacing: 8, // Vertical spacing between rows
-                  children: conditions.map((condition) {
-                    bool isSelected = selectedCondition[condition] ?? false;
-                    return ChoiceChip(
-                      showCheckmark: false,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      side: WidgetStateBorderSide.resolveWith(
-                        (Set<WidgetState> states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return BorderSide(
-                              color: R.colors.bgPrimary,
-                              width: 2,
-                            );
-                          }
-                          return BorderSide(
-                            color: R.colors.neutral300,
-                            width: 2,
+                symptoms.isEmpty
+                    ? Text("Loading.....")
+                    : Wrap(
+                        spacing: 8, // Horizontal spacing between chips
+                        runSpacing: 8, // Vertical spacing between rows
+                        children: symptoms.map((e) {
+                          String name = e.name;
+                          String id = e.id;
+
+                          bool isSelected = selectedCondition[id] ?? false;
+
+                          return ChoiceChip(
+                            showCheckmark: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            side: WidgetStateBorderSide.resolveWith(
+                              (Set<WidgetState> states) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return BorderSide(
+                                    color: R.colors.bgPrimary,
+                                    width: 2,
+                                  );
+                                }
+                                return BorderSide(
+                                  color: R.colors.neutral300,
+                                  width: 2,
+                                );
+                              },
+                            ),
+                            selectedColor: R.colors.bgPrimary,
+                            backgroundColor: R.colors.white,
+                            label: Text(
+                              name,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            selected: isSelected,
+                            onSelected: (bool value) {
+                              int selectedCount = selectedCondition.values
+                                  .where((v) => v)
+                                  .length;
+                              if (value && selectedCount >= maxSelections) {
+                                Fluttertoast.showToast(
+                                  backgroundColor: R.colors.green200,
+                                  msg:
+                                      "You can select up to $maxSelections conditions only!",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                );
+                                return;
+                              }
+                              setState(() {
+                                selectedCondition[id] = value;
+                              });
+                            },
                           );
-                        },
-                      ),
-                      selectedColor: R.colors.bgPrimary,
-                      backgroundColor: R.colors.white,
-                      label: Text(
-                        condition,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      selected: isSelected,
-                      onSelected: (bool value) {
-                        int selectedCount =
-                            selectedCondition.values.where((v) => v).length;
-                        if (value && selectedCount >= maxSelections) {
-                          Fluttertoast.showToast(
-                            backgroundColor: R.colors.green200,
-                            msg:
-                                "You can select up to $maxSelections conditions only!",
-                            toastLength: Toast.LENGTH_SHORT,
-                            gravity: ToastGravity.BOTTOM,
-                          );
-                          return; // Prevent selection
-                        }
-                        setState(() {
-                          selectedCondition[condition] = value;
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
+                        }).toList()),
                 const Spacer(),
                 CustomButton(
                   goTo: () {
+                    logger.i(selectedCondition);
+                    logger.i(selectedCondition.entries
+                        .where((entry) => entry.value)
+                        .map((entry) => entry.key)
+                        .toList());
+                    store.symptoms = selectedCondition.entries
+                        .where((entry) => entry.value)
+                        .map((entry) => entry.key)
+                        .toList();
                     Modular.to.pushNamed(AdoptScreen.toRoute);
                   },
                   elevation: 0,

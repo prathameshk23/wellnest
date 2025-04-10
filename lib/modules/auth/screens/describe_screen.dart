@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:wellcare/modules/auth/auth_module.dart';
 import 'package:wellcare/modules/auth/screens/condition_screen.dart';
 import 'package:wellcare/resources/r.dart';
+import 'package:wellcare/store/app_store.dart';
 import 'package:wellcare/utils/logger.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 import 'package:wellcare/widgets/custom_slider.dart';
@@ -22,16 +23,20 @@ class DescribeScreen extends StatefulWidget {
 class _DescribeScreenState extends State<DescribeScreen> {
   double motivationValue = 0;
   double healthValue = 0;
+  final AppStore store = Modular.get<AppStore>();
 
   void _handleMotivationSliderChange(double value) {
     setState(() {
       motivationValue = value;
+      logger.i(motivationValue);
+      store.motivationLevel = motivationValue.toString();
     });
   }
 
   void _handleHealthSliderChnage(double value) {
     setState(() {
       healthValue = value;
+      store.healthStatus = healthValue.toString();
     });
   }
 

@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wellcare/models/conditions.dart';
 import 'package:wellcare/modules/auth/auth_module.dart';
 import 'package:wellcare/modules/auth/screens/describe_screen.dart';
 import 'package:wellcare/resources/r.dart';
+import 'package:wellcare/store/app_store.dart';
 import 'package:wellcare/widgets/custom_button.dart';
+
+import '../../../utils/logger.dart';
+import '../services/auth_service.dart';
 
 final List<String> ages = [
   "Under 18",
@@ -42,12 +47,38 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
   bool isMenstrualCycle = false;
   bool isSelected = false;
   Map<String, bool> selectedGoals = {};
+  late List<Symptoms> symptoms;
+  final AppStore store = Modular.get<AppStore>();
+  AuthServices apiServices = AuthServices();
 
   @override
   void initState() {
     super.initState();
+    // symptoms = apiServices.getAllSymptoms();
+    // getSymptoms();
+    // logger.i(symptoms);
     for (String goal in wellnessGoals) {
       selectedGoals[goal] = false; // Initialize all as unselected
+    }
+  }
+
+  Future<void> getSymptoms() async {
+    symptoms = await apiServices.getAllSymptoms();
+  }
+
+  void function() {
+    try {
+      store.ageGroup = dropdownValue;
+      store.trackMenstrual = isMenstrualCycle;
+      store.wellnessGoals = selectedGoals.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList();
+      print(store.wellnessGoals);
+      print(store.ageGroup);
+      Modular.to.pushNamed(DescribeScreen.toRoute);
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -261,7 +292,8 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
                 const Spacer(),
                 CustomButton(
                   goTo: () {
-                    Modular.to.pushNamed(DescribeScreen.toRoute);
+                    function();
+                    // Modular.to.pushNamed(DescribeScreen.toRoute);
                   },
                   elevation: 0,
                   buttonColor: R.colors.bgPrimary,

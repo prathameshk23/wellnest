@@ -7,6 +7,8 @@ import 'package:wellcare/modules/welcome/screens/welcome_screen.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
+import '../services/auth_service.dart';
+
 class CompanionScreen extends StatefulWidget {
   const CompanionScreen({super.key});
 
@@ -18,6 +20,8 @@ class CompanionScreen extends StatefulWidget {
 }
 
 class _CompanionScreenState extends State<CompanionScreen> {
+  AuthServices apiServices = AuthServices();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,8 +92,9 @@ class _CompanionScreenState extends State<CompanionScreen> {
                 const Spacer(),
                 CustomButton(
                   goTo: () {
-                    Modular.to.pushNamedAndRemoveUntil(
-                        WelcomeScreen.toRoute, (route) => false);
+                    apiServices.postUser();
+                    // Modular.to.pushNamedAndRemoveUntil(
+                    //     WelcomeScreen.toRoute, (route) => false);
                   },
                   elevation: 0,
                   buttonColor: R.colors.bgPrimary,

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wellcare/modules/auth/auth_module.dart';
 import 'package:wellcare/modules/auth/screens/user_setup_screen.dart';
 import 'package:wellcare/resources/r.dart';
+import 'package:wellcare/store/app_store.dart';
 import 'package:wellcare/utils/logger.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 import 'package:wellcare/widgets/custom_textfield.dart';
@@ -23,39 +24,6 @@ class SignupScreen extends StatefulWidget {
 
 enum Gender { male, female, other }
 
-final supabase = Supabase.instance.client;
-
-Future<void> signUpNewUser() async {
-  try {
-    final AuthResponse res = await supabase.auth.signUp(
-      email: 'prathamz2301@gmail.com',
-      password: 'Pratham@2301',
-    );
-
-    Fluttertoast.showToast(
-      msg: "Signup successful!",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-    );
-    logger.d(res.user?.id);
-    Modular.to.pushNamed(UserSetupScreen.toRoute);
-  } catch (e) {
-    if (e is AuthException) {
-      Fluttertoast.showToast(
-        msg: e.message,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-      );
-    } else {
-      Fluttertoast.showToast(
-        msg: "An unexpected error occurred",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
-  }
-}
-
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -63,7 +31,59 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
+  final AppStore store = Modular.get<AppStore>();
+
   Gender? _gender;
+
+  final supabase = Supabase.instance.client;
+
+  Future<void> signUpNewUser() async {
+    try {
+      if (_nameController.text.isEmpty ||
+          _emailController.text.isEmpty ||
+          _usernameController.text.isEmpty) {
+        Fluttertoast.showToast(
+          msg: "Please fill all the fields...!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+        return;
+      } else {
+        store.name = _nameController.text;
+        store.email = _emailController.text;
+        store.username = _usernameController.text;
+        store.gender = _gender.toString();
+        final AuthResponse res = await supabase.auth.signUp(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        Fluttertoast.showToast(
+          msg: "Signup successful!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+        logger.d(res.user?.id);
+        store.authId = res.user!.id;
+        Modular.to.pushNamed(UserSetupScreen.toRoute);
+      }
+      Modular.to.pushNamed(UserSetupScreen.toRoute);
+    } catch (e) {
+      if (e is AuthException) {
+        Fluttertoast.showToast(
+          msg: e.message,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      } else {
+        Fluttertoast.showToast(
+          msg: "An unexpected error occurred",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

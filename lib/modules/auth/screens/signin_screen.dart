@@ -9,6 +9,8 @@ import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/utils/logger.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 import 'package:wellcare/widgets/custom_textfield.dart';
+import '../../../models/user.dart';
+import '../services/auth_service.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -22,41 +24,44 @@ class SigninScreen extends StatefulWidget {
 
 final supabase = Supabase.instance.client;
 
-Future<void> signInUser() async {
-  try {
-    final AuthResponse res = await supabase.auth.signInWithPassword(
-        email: 'prathamz2301@gmail.com', password: 'Pratham@2301');
-
-    Fluttertoast.showToast(
-      msg: "Signup successful!",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-    );
-    logger.d(res.user?.id);
-    Modular.to.pushNamed(DashboardScreen.toRoute);
-  } catch (e) {
-    if (e is AuthException) {
-      Fluttertoast.showToast(
-        msg: e.message,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-      );
-    } else {
-      Fluttertoast.showToast(
-        msg: "An unexpected error occurred",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
-  }
-}
-
 class _SigninScreenState extends State<SigninScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  AuthServices apiServices = AuthServices();
+
   @override
   void initState() {
     super.initState();
+  }
+
+  Future<void> signInUser() async {
+    try {
+      final AuthResponse res = await supabase.auth.signInWithPassword(
+          email: _emailController.text, password: _passwordController.text);
+
+      Fluttertoast.showToast(
+        msg: "Signup successful!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      logger.d(res.user?.id);
+      var response = await apiServices.getUser(res.user!.id);
+      Modular.to.pushNamed(DashboardScreen.toRoute);
+    } catch (e) {
+      if (e is AuthException) {
+        Fluttertoast.showToast(
+          msg: "jsdbfjhiebf",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      } else {
+        Fluttertoast.showToast(
+          msg: "An unexpected error occurred",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    }
   }
 
   @override
