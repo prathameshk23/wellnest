@@ -1,0 +1,2 @@
+/home/pratham/personal/college_projects/wellnest/wellcare/android/app/.cxx/Debug/5z1j7116/x86/CMakeFiles/edit_cache.dir
+/home/pratham/personal/college_projects/wellnest/wellcare/android/app/.cxx/Debug/5z1j7116/x86/CMakeFiles/rebuild_cache.dir

@@ -12,7 +12,7 @@ import '../../../models/medicine.dart';
 import '../../../store/app_store.dart';
 import '../../../utils/logger.dart';
 
-const baseUrl = "https://bd8d-103-173-195-212.ngrok-free.app";
+const baseUrl = "https://ae8b-115-96-216-207.ngrok-free.app";
 late String endPoint;
 final AppStore store = Modular.get<AppStore>();
 
