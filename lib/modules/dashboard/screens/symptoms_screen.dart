@@ -42,14 +42,11 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
       print(false);
     }
     getSymptoms();
-    // logger.i(symptoms);
-    // conditions = symptoms.map((e) => e.name).toList();
   }
 
   Future<void> getSymptoms() async {
     symptoms = await apiServices.getUserSymptoms(store.user.id);
     symptomsTrack = await apiServices.getSymptomsTrack(store.user.id);
-    // conditions = symptoms.map((e) => e.name).toList();
     logger.i(symptoms);
     setState(() {});
   }
@@ -71,158 +68,147 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
         backgroundColor: R.colors.bgPrimary,
         foregroundColor: R.colors.black,
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: -80,
-            left: 0,
-            right: 0,
-            child: Transform.scale(
-              scale: 1.1,
-              child: SvgPicture.asset(R.assets.topVector),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              left: 0,
+              right: 0,
+              child: Transform.scale(
+                scale: 1.1,
+                child: SvgPicture.asset(R.assets.topVector),
+              ),
             ),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 1,
-              width: double.infinity,
-              color: R.colors.white,
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 1,
+                width: double.infinity,
+                color: R.colors.white,
+              ),
             ),
-          ),
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 15,
-                  horizontal: 18,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: SvgPicture.asset(R.assets.backIcon),
-                    ),
-                    const SizedBox(
-                      width: 30,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          DateFormat.yMMMMd('en_US')
-                              .format(DateTime.parse(store.selectedDate)),
-                          style: GoogleFonts.publicSans(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w700,
-                            color: R.colors.black,
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 60,
-              ),
-              Text(
-                "Symptoms",
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: R.colors.black,
-                ),
-              ),
-              SvgPicture.asset(R.assets.germs),
-              Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.35,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: R.colors.white,
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: R.colors.neutral300,
-                        spreadRadius: 1,
-                        blurRadius: 2,
-                      ),
-                    ],
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 15,
+                    horizontal: 18,
                   ),
-                  child: Column(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.3,
-                        child: SingleChildScrollView(
-                          child: symptoms.isEmpty
-                              ? const Text("Loading....")
-                              : Column(
-                                  children: List.generate(
-                                    symptoms.length,
-                                    (index) {
-                                      final symptomId = symptoms[index].id;
-
-                                      // Find the matching symptom track value using userSymptomId
-                                      final matchedTrack =
-                                          symptomsTrack.firstWhere(
-                                        (track) =>
-                                            track.userSymptomId == symptomId,
-                                        orElse: () => SymptomsTrack(
-                                          value: "0",
-                                          id: '',
-                                          date: DateTime.now(),
-                                          userSymptomId: '',
-                                          userId: '',
-                                        ),
-                                      );
-
-                                      final sliderValue =
-                                          int.tryParse(matchedTrack.value) ?? 0;
-
-                                      return ActivitySlider(
-                                        sliderLabel:
-                                            symptoms[index].symptom.name,
-                                        value: sliderValue,
-                                        onChanged: (value) {
-                                          final symptomId = symptoms[index].id;
-
-                                          // Remove any existing entry with the same userSymptomId
-                                          updates.removeWhere((update) =>
-                                              update["userSymptomId"] ==
-                                              symptomId);
-
-                                          // Add the updated entry
-                                          updates.add({
-                                            "value": value,
-                                            'date': DateFormat('yyyy-MM-dd')
-                                                .format(kDay),
-                                            "userSymptom": symptoms[index].id,
-                                            "user": symptoms[index].userId,
-                                          });
-                                          logger.i(updates);
-                                          // Handle slider value change here
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: SvgPicture.asset(R.assets.backIcon),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              DateFormat.yMMMMd('en_US')
+                                  .format(DateTime.parse(store.selectedDate)),
+                              style: GoogleFonts.publicSans(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                                color: R.colors.black,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              // const Text("Scroll to see more symptoms"),
-              const Spacer(),
-              store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay)
-                  ? CustomButton(
+                const SizedBox(height: 20),
+                Text(
+                  "Symptoms",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: R.colors.black,
+                  ),
+                ),
+                SizedBox(
+                  height: 120,
+                  child: SvgPicture.asset(
+                    R.assets.germs,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: R.colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: R.colors.neutral300,
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: symptoms.isEmpty
+                          ? const Center(child: Text("Loading...."))
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: symptoms.length,
+                              itemBuilder: (context, index) {
+                                final symptomId = symptoms[index].id;
+
+                                final matchedTrack = symptomsTrack.firstWhere(
+                                  (track) => track.userSymptomId == symptomId,
+                                  orElse: () => SymptomsTrack(
+                                    value: "0",
+                                    id: '',
+                                    date: DateTime.now(),
+                                    userSymptomId: '',
+                                    userId: '',
+                                  ),
+                                );
+
+                                final sliderValue =
+                                    int.tryParse(matchedTrack.value) ?? 0;
+
+                                return ActivitySlider(
+                                  sliderLabel: symptoms[index].symptom.name,
+                                  value: sliderValue,
+                                  onChanged: (value) {
+                                    final symptomId = symptoms[index].id;
+
+                                    updates.removeWhere((update) =>
+                                        update["userSymptomId"] == symptomId);
+
+                                    updates.add({
+                                      "value": value,
+                                      'date':
+                                          DateFormat('yyyy-MM-dd').format(kDay),
+                                      "userSymptom": symptoms[index].id,
+                                      "user": symptoms[index].userId,
+                                    });
+                                    logger.i(updates);
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ),
+                if (store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay))
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: CustomButton(
                       goTo: () async {
                         for (var i in updates) {
                           await apiServices.postSymptomsTrack(i);
@@ -238,11 +224,14 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
                         color: R.colors.black,
                         fontWeight: FontWeight.w700,
                       ),
-                    )
-                  : SizedBox(),
-            ],
-          ),
-        ],
+                    ),
+                  )
+                else
+                  const SizedBox(height: 16),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

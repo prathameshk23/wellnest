@@ -7,6 +7,7 @@ import 'package:wellcare/modules/welcome/screens/welcome_screen.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
+import '../../../store/app_store.dart';
 import '../services/auth_service.dart';
 
 class CompanionScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class CompanionScreen extends StatefulWidget {
 
 class _CompanionScreenState extends State<CompanionScreen> {
   AuthServices apiServices = AuthServices();
+  final AppStore store = Modular.get<AppStore>();
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +73,7 @@ class _CompanionScreenState extends State<CompanionScreen> {
                   height: 10,
                 ),
                 Text(
-                  "Prathamesh is here for you",
+                  "${store.panda} is here for you",
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
@@ -93,8 +95,8 @@ class _CompanionScreenState extends State<CompanionScreen> {
                 CustomButton(
                   goTo: () {
                     apiServices.postUser();
-                    // Modular.to.pushNamedAndRemoveUntil(
-                    //     WelcomeScreen.toRoute, (route) => false);
+                    Modular.to.pushNamedAndRemoveUntil(
+                        WelcomeScreen.toRoute, (route) => false);
                   },
                   elevation: 0,
                   buttonColor: R.colors.bgPrimary,

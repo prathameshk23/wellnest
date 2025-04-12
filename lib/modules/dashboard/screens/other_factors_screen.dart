@@ -30,6 +30,7 @@ class _OtherFactorsScreenState extends State<OtherFactorsScreen> {
   final kDay = DateTime(kToday.year, kToday.month, kToday.day);
   List<OtherTrack> otherTrack = [];
   List<String> conditions = [];
+  bool isLoading = true; // Add loading state
   Map<String, dynamic> condition = {
     "Alcohol": "11129468-ec91-4bfd-8cb6-c1547bc4a096",
     "Stress": "4568b4cd-3a11-463e-8f4e-855b8c4bb64b",
@@ -51,6 +52,10 @@ class _OtherFactorsScreenState extends State<OtherFactorsScreen> {
   }
 
   Future<void> getSymptoms() async {
+    setState(() {
+      isLoading = true; // Set loading to true when starting fetch
+    });
+
     try {
       otherTrack = await apiServices.getOtherTrack(store.user.id);
 
@@ -70,9 +75,14 @@ class _OtherFactorsScreenState extends State<OtherFactorsScreen> {
     } catch (e) {
       logger.e("Error fetching other factors: $e");
       conditions = condition.keys.toList();
+    } finally {
+      // Ensure setState is called even if there's an error
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Set loading to false when fetch completes
+        });
+      }
     }
-
-    setState(() {});
   }
 
   @override
@@ -179,104 +189,145 @@ class _OtherFactorsScreenState extends State<OtherFactorsScreen> {
                       ),
                     ],
                   ),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.3,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: List.generate(
-                              conditions.isNotEmpty
-                                  ? conditions.length
-                                  : condition.length,
-                              (index) {
-                                // Get the current factor name based on whether conditions is empty
-                                String currentFactorName = conditions.isNotEmpty
-                                    ? conditions[index]
-                                    : condition.keys.elementAt(index);
+                  child: isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : Column(
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.3,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: List.generate(
+                                    conditions.isNotEmpty
+                                        ? conditions.length
+                                        : condition.length,
+                                    (index) {
+                                      // Get the current factor name based on whether conditions is empty
+                                      String currentFactorName =
+                                          conditions.isNotEmpty
+                                              ? conditions[index]
+                                              : condition.keys.elementAt(index);
 
-                                // Find the track for this factor name
-                                OtherTrack? currentTrack;
-                                try {
-                                  List<OtherTrack> matchingTracks = otherTrack
-                                      .where(
-                                        (track) =>
-                                            track.otherFactorName ==
-                                            currentFactorName,
-                                      )
-                                      .toList();
+                                      // Find the track for this factor name
+                                      OtherTrack? currentTrack;
+                                      try {
+                                        List<OtherTrack> matchingTracks =
+                                            otherTrack
+                                                .where(
+                                                  (track) =>
+                                                      track.otherFactorName ==
+                                                      currentFactorName,
+                                                )
+                                                .toList();
 
-                                  logger.i(
-                                      "For $currentFactorName, found ${matchingTracks.length} matching tracks");
+                                        logger.i(
+                                            "For $currentFactorName, found ${matchingTracks.length} matching tracks");
 
-                                  if (matchingTracks.isNotEmpty) {
-                                    currentTrack = matchingTracks.first;
-                                    logger.i(
-                                        "Selected track with value: ${currentTrack.value}");
-                                  }
-                                } catch (e) {
-                                  logger.e(
-                                      "Error finding track for $currentFactorName: $e");
-                                  currentTrack = null;
-                                }
+                                        if (matchingTracks.isNotEmpty) {
+                                          currentTrack = matchingTracks.first;
+                                          logger.i(
+                                              "Selected track with value: ${currentTrack.value}");
+                                        }
+                                      } catch (e) {
+                                        logger.e(
+                                            "Error finding track for $currentFactorName: $e");
+                                        currentTrack = null;
+                                      }
 
-                                int sliderValue = 0;
-                                if (currentTrack != null &&
-                                    currentTrack.value.isNotEmpty) {
-                                  try {
-                                    sliderValue = int.parse(currentTrack.value);
-                                    logger.i(
-                                        "Parsed value $sliderValue for $currentFactorName");
-                                  } catch (e) {
-                                    logger.e(
-                                        "Failed to parse value '${currentTrack.value}': $e");
-                                    sliderValue = 0;
-                                  }
-                                } else {
-                                  logger.i(
-                                      "No value found for $currentFactorName, using 0");
-                                }
+                                      int sliderValue = 0;
+                                      if (currentTrack != null &&
+                                          currentTrack.value.isNotEmpty) {
+                                        try {
+                                          sliderValue =
+                                              int.parse(currentTrack.value);
+                                          logger.i(
+                                              "Parsed value $sliderValue for $currentFactorName");
+                                        } catch (e) {
+                                          logger.e(
+                                              "Failed to parse value '${currentTrack.value}': $e");
+                                          sliderValue = 0;
+                                        }
+                                      } else {
+                                        logger.i(
+                                            "No value found for $currentFactorName, using 0");
+                                      }
 
-                                return ActivitySlider(
-                                  sliderLabel: currentFactorName,
-                                  value: sliderValue,
-                                  onChanged: (value) {
-                                    // Remove existing updates for this factor
-                                    updates.removeWhere((update) =>
-                                        update["otherTracking"] ==
-                                        condition[currentFactorName]);
+                                      return ActivitySlider(
+                                        sliderLabel: currentFactorName,
+                                        value: sliderValue,
+                                        onChanged: (value) {
+                                          // Remove existing updates for this factor
+                                          updates.removeWhere((update) =>
+                                              update["otherTracking"] ==
+                                              condition[currentFactorName]);
 
-                                    // Get the otherfactor ID
-                                    String otherFactorId =
-                                        condition[currentFactorName];
+                                          // Get the otherfactor ID
+                                          String otherFactorId =
+                                              condition[currentFactorName];
 
-                                    // Add new update with otherfactor ID
-                                    updates.add({
-                                      "value": value.toString(),
-                                      'date':
-                                          DateFormat('yyyy-MM-dd').format(kDay),
-                                      "otherTracking": otherFactorId,
-                                      "user": store.user.id,
-                                    });
+                                          // Add new update with otherfactor ID
+                                          updates.add({
+                                            "value": value.toString(),
+                                            'date': DateFormat('yyyy-MM-dd')
+                                                .format(kDay),
+                                            "otherTracking": otherFactorId,
+                                            "user": store.user.id,
+                                          });
 
-                                    logger.i(
-                                        "Added update: value=$value, otherTracking=$otherFactorId");
-                                  },
-                                );
-                              },
+                                          // Update state to refresh the UI
+                                          setState(() {
+                                            // Update the current track in the local list to reflect changes immediately
+                                            for (int i = 0;
+                                                i < otherTrack.length;
+                                                i++) {
+                                              if (otherTrack[i]
+                                                      .otherFactorName ==
+                                                  currentFactorName) {
+                                                otherTrack[i].value =
+                                                    value.toString();
+                                                break;
+                                              }
+                                            }
+                                          });
+
+                                          logger.i(
+                                              "Added update: value=$value, otherTracking=$otherFactorId");
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
               const Spacer(),
               CustomButton(
                 goTo: () async {
-                  for (var i in updates) {
-                    await apiServices.postOtherTrack(i);
+                  setState(() {
+                    isLoading = true;
+                  });
+
+                  try {
+                    for (var i in updates) {
+                      await apiServices.postOtherTrack(i);
+                    }
+                    // Clear updates after successful submission
+                    updates.clear();
+                  } catch (e) {
+                    logger.e("Error posting other factors: $e");
+                    // Show error message to user
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Failed to save changes")));
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        isLoading = false;
+                      });
+                      Navigator.pop(context);
+                    }
                   }
                 },
                 elevation: 0,

@@ -304,6 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'user': store.user.id
                         };
                         await apiServices.postMoodTrack(body);
+                        Navigator.pop(context);
                       },
                       // onPressed: () {
                       //   // Save the selected mood and tags
