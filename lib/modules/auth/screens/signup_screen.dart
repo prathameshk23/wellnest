@@ -28,8 +28,6 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final AppStore store = Modular.get<AppStore>();
 
@@ -130,11 +128,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(
                   height: 15,
-                ),
-                CustomTextField(
-                  labelText: "Confirm Password",
-                  controller: _confirmPasswordController,
-                  obscureText: true,
                 ),
                 const SizedBox(
                   height: 15,

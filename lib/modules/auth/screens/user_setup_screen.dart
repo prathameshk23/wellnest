@@ -9,7 +9,6 @@ import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/store/app_store.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
-import '../../../utils/logger.dart';
 import '../services/auth_service.dart';
 
 final List<String> ages = [
@@ -183,54 +182,6 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
                               value: value, child: Text(value));
                         }).toList(),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Would you like to track your menstrual cycle?",
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: R.colors.black,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Transform.scale(
-                          scale: 0.8,
-                          child: Switch(
-                            inactiveThumbColor: R.colors.black,
-                            inactiveTrackColor: R.colors.white,
-                            value: isMenstrualCycle,
-                            activeColor: R.colors.green200,
-                            onChanged: (bool value) {
-                              setState(
-                                () {
-                                  isMenstrualCycle = value;
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                        Text(
-                          "Yes",
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: R.colors.black,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),

@@ -31,6 +31,7 @@ class AuthServices {
   Future<void> postUser() async {
     endPoint = "/user";
     final url = "$baseUrl$endPoint";
+    User user;
 
     var body = {
       'name': store.name,
@@ -58,6 +59,8 @@ class AuthServices {
     );
     print(response.body);
     var data = jsonDecode(response.body);
+    user = User.fromJson(data);
+    store.user = user;
     print(data);
     for (var symptomId in store.symptoms) {
       var body = {
@@ -74,7 +77,6 @@ class AuthServices {
         body: jsonEncode(body),
       );
 
-      // You can now use `body` to send a request, print, etc.
       print(body);
     }
   }

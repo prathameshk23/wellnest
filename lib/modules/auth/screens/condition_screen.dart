@@ -231,6 +231,19 @@ class _ConditionScreenState extends State<ConditionScreen> {
                         .where((entry) => entry.value)
                         .map((entry) => entry.key)
                         .toList());
+                    final selected = selectedCondition.entries
+                        .where((entry) => entry.value)
+                        .map((entry) => entry.key)
+                        .toList();
+                    if (selected.isEmpty) {
+                      // Show a message or alert
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('Please select at least one condition.')),
+                      );
+                      return;
+                    }
                     store.symptoms = selectedCondition.entries
                         .where((entry) => entry.value)
                         .map((entry) => entry.key)
