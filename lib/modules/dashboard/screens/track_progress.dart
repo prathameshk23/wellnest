@@ -1,5 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:wellcare/models/menstrual.dart';
+import 'package:wellcare/modules/dashboard/screens/dashboard_screen.dart';
+import 'package:wellcare/modules/dashboard/services/dash_services.dart';
+import 'package:wellcare/store/app_store.dart';
+import 'package:wellcare/widgets/custom_button.dart';
+
+import '../../../resources/r.dart';
+import '../../../utils/logger.dart';
+
+final kToday = DateTime.now();
 
 class TrackProgress extends StatefulWidget {
   const TrackProgress({super.key});
@@ -9,10 +22,17 @@ class TrackProgress extends StatefulWidget {
 }
 
 class _TrackProgressState extends State<TrackProgress> {
+  AppStore store = Modular.get<AppStore>();
+  DashServices apiServices = DashServices();
   final List<DateTime> _selectedDates = [];
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  final CalendarFormat _calendarFormat = CalendarFormat.month;
+  final kFirstDay = DateTime(kToday.year - 10, kToday.month - 3, kToday.day);
+  final kLastDay = DateTime(kToday.year, kToday.month, kToday.day);
+  DateTime _focusedDay = kToday;
+  String month = "";
+  String year = "";
+  final dateFormatter = DateFormat('dd-MM-yyyy');
+  List<Menstrual> menstrual = [];
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
@@ -40,79 +60,207 @@ class _TrackProgressState extends State<TrackProgress> {
     });
   }
 
-  void _saveCycleDays() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Cycle days saved: ${_selectedDates.map((d) => d.toString().split(' ')[0]).join(', ')}")),
-    );
+  @override
+  void initState() {
+    getMenstrualCycle(month, year);
+    // TODO: implement initState
+    super.initState();
+  }
+
+  Future<void> getMenstrualCycle(String month, String year) async {
+    menstrual = await apiServices.getMenstrual(store.user.id, month, year);
+    _selectedDates.clear();
+
+// Loop through each menstrual entry
+    for (var entry in menstrual) {
+      for (var dateStr in entry.date) {
+        try {
+          final parsedDate = dateFormatter.parse(dateStr);
+          _selectedDates.add(parsedDate);
+        } catch (e) {
+          print("❌ Error parsing date: $dateStr");
+        }
+      }
+    }
+
+// Now setState to reflect changes in UI
+    setState(() {});
+    logger.i(menstrual.toString());
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                "Track Your Cycle",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.pink[700],
-                ),
-              ),
-              const SizedBox(height: 12),
-              TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: _focusedDay,
-                calendarFormat: _calendarFormat,
-                selectedDayPredicate: (day) => _isDateSelected(day),
-                onDaySelected: _onDaySelected,
-                onFormatChanged: (format) {
-                  setState(() => _calendarFormat = format);
-                },
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Colors.pink.shade100,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Colors.pink,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedTextStyle: TextStyle(
-                    color: Colors.white,
+    return Scaffold(
+      backgroundColor: R.colors.white,
+      appBar: AppBar(
+        title: Text("Welcome ${store.user.name}"),
+        automaticallyImplyLeading: false,
+        backgroundColor: R.colors.bgPrimary,
+        foregroundColor: R.colors.black,
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                const SizedBox(height: 16),
+                Text(
+                  "Track Your Cycle",
+                  style: TextStyle(
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
-                  ),
-                  weekendTextStyle: TextStyle(color: Colors.grey[600]),
-                  defaultTextStyle: TextStyle(color: Colors.grey[800]),
-                ),
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                  titleTextStyle: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.pink[800],
+                    color: R.colors.black,
                   ),
                 ),
-              ),
-            ],
-          ),
-          // Save button
-          Positioned(
-            bottom: 30,
-            right: 30,
-            child: FloatingActionButton.extended(
-              onPressed: _saveCycleDays,
-              icon: Icon(Icons.save),
-              label: Text("Save"),
-              backgroundColor: Colors.pink,
+                const SizedBox(height: 12),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: R.colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: R.colors.neutral300,
+                          spreadRadius: 1,
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "${_focusedDay.monthName()} ${_focusedDay.year}",
+                              style: GoogleFonts.publicSans(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: R.colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        TableCalendar(
+                          sixWeekMonthsEnforced: true,
+                          rowHeight: 40,
+                          calendarStyle: CalendarStyle(
+                            defaultTextStyle: GoogleFonts.publicSans(
+                              fontSize: 16,
+                              color: R.colors.black,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            outsideTextStyle: GoogleFonts.publicSans(
+                              fontSize: 16,
+                              color: R.colors.neutral400,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            todayTextStyle: GoogleFonts.publicSans(
+                              fontSize: 16,
+                              color: R.colors.black,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            todayDecoration: BoxDecoration(
+                              color: R.colors.bgPrimary,
+                              shape: BoxShape.circle,
+                            ),
+                            selectedTextStyle: GoogleFonts.publicSans(
+                              fontSize: 16,
+                              color: R.colors.black,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            selectedDecoration: BoxDecoration(
+                              color: Colors.pinkAccent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          daysOfWeekStyle: DaysOfWeekStyle(
+                            weekdayStyle: GoogleFonts.publicSans(
+                              fontSize: 14,
+                              color: R.colors.neutral400,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            weekendStyle: GoogleFonts.publicSans(
+                              fontSize: 14,
+                              color: R.colors.neutral400,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          selectedDayPredicate: (day) {
+                            return _selectedDates.any((d) => isSameDay(d, day));
+                          },
+                          calendarFormat: _calendarFormat,
+                          focusedDay: _focusedDay,
+                          firstDay: kFirstDay,
+                          lastDay: kLastDay,
+                          headerVisible: false,
+                          onDaySelected: (selectedDay, focusedDay) {
+                            setState(() {
+                              month = selectedDay.month.toString();
+                              year = selectedDay.year.toString();
+                              _focusedDay = focusedDay;
+                              final alreadySelected = _selectedDates
+                                  .any((d) => isSameDay(d, selectedDay));
+                              if (alreadySelected) {
+                                _selectedDates.removeWhere(
+                                    (d) => isSameDay(d, selectedDay));
+                              } else {
+                                _selectedDates.add(selectedDay);
+                              }
+                            });
+                          },
+                          onPageChanged: (newFocusedDay) async {
+                            setState(() {
+                              _selectedDates.clear();
+                              _focusedDay = DateTime(
+                                  newFocusedDay.year, newFocusedDay.month, 1);
+                            });
+
+                            // Extract month and year as strings
+                            month = newFocusedDay.month.toString(); // e.g. "4"
+                            year = newFocusedDay.year.toString(); // e.g. "2025"
+
+                            // Fetch new data
+                            await getMenstrualCycle(month, year);
+                          },
+                          headerStyle: const HeaderStyle(
+                            formatButtonVisible: false,
+                            titleCentered: false,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                CustomButton(
+                  goTo: () async {
+                    var body = {
+                      "dates": _selectedDates
+                          .map((d) => dateFormatter.format(d))
+                          .toList(),
+                      "month": month,
+                      "year": year,
+                      "user": store.user.id
+                    };
+                    await apiServices.postMenstrual(body);
+                  },
+                  elevation: 0,
+                  buttonText: "Save",
+                  buttonWidth: double.infinity,
+                  buttonColor: R.colors.bgPrimary,
+                  textColor: R.colors.black,
+                )
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

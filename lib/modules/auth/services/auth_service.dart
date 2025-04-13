@@ -1,15 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:wellcare/models/conditions.dart';
 import 'package:http/http.dart' as http;
+import 'package:wellcare/models/conditions.dart';
 
 import '../../../models/user.dart';
 import '../../../store/app_store.dart';
 import '../../../utils/logger.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 
-const baseUrl = "https://1562-157-119-177-47.ngrok-free.app";
+const baseUrl = "https://c419-115-96-217-84.ngrok-free.app";
 late String endPoint;
 final AppStore store = Modular.get<AppStore>();
 

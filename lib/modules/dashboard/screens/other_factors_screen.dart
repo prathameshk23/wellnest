@@ -90,15 +90,7 @@ class _OtherFactorsScreenState extends State<OtherFactorsScreen> {
     return Scaffold(
       backgroundColor: R.colors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(
-            Icons.settings_outlined,
-            size: 30,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false,
         backgroundColor: R.colors.bgPrimary,
         foregroundColor: R.colors.black,
       ),
@@ -304,43 +296,44 @@ class _OtherFactorsScreenState extends State<OtherFactorsScreen> {
                 ),
               ),
               const Spacer(),
-              CustomButton(
-                goTo: () async {
-                  setState(() {
-                    isLoading = true;
-                  });
+              if (store.selectedDate == DateFormat('yyyy-MM-dd').format(kDay))
+                CustomButton(
+                  goTo: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
 
-                  try {
-                    for (var i in updates) {
-                      await apiServices.postOtherTrack(i);
+                    try {
+                      for (var i in updates) {
+                        await apiServices.postOtherTrack(i);
+                      }
+                      // Clear updates after successful submission
+                      updates.clear();
+                    } catch (e) {
+                      logger.e("Error posting other factors: $e");
+                      // Show error message to user
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Failed to save changes")));
+                    } finally {
+                      if (mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        Navigator.pop(context);
+                      }
                     }
-                    // Clear updates after successful submission
-                    updates.clear();
-                  } catch (e) {
-                    logger.e("Error posting other factors: $e");
-                    // Show error message to user
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Failed to save changes")));
-                  } finally {
-                    if (mounted) {
-                      setState(() {
-                        isLoading = false;
-                      });
-                      Navigator.pop(context);
-                    }
-                  }
-                },
-                elevation: 0,
-                rounded: 50,
-                buttonText: "Done",
-                buttonWidth: double.infinity,
-                buttonColor: R.colors.bgPrimary,
-                textStyle: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: R.colors.black,
-                  fontWeight: FontWeight.w700,
+                  },
+                  elevation: 0,
+                  rounded: 50,
+                  buttonText: "Done",
+                  buttonWidth: double.infinity,
+                  buttonColor: R.colors.bgPrimary,
+                  textStyle: GoogleFonts.inter(
+                    fontSize: 16,
+                    color: R.colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
             ],
           ),
         ],

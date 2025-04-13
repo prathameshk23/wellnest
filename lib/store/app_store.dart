@@ -48,4 +48,7 @@ abstract class _AppStore with Store {
 
   @observable
   String selectedDate = "";
+
+  @observable
+  List<String> menstrualDates = [];
 }

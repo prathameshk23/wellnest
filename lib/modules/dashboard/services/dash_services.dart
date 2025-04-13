@@ -1,18 +1,20 @@
 import 'dart:convert';
 
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:http/http.dart' as http;
 import 'package:wellcare/models/health.dart';
+import 'package:wellcare/models/menstrual.dart';
 import 'package:wellcare/models/mood_track.dart';
 import 'package:wellcare/models/other_track.dart';
 import 'package:wellcare/models/sleep_track.dart';
 import 'package:wellcare/models/symptoms_track.dart';
 import 'package:wellcare/models/user_symptoms.dart';
-import 'package:http/http.dart' as http;
+
 import '../../../models/medicine.dart';
 import '../../../store/app_store.dart';
 import '../../../utils/logger.dart';
 
-const baseUrl = "https://1562-157-119-177-47.ngrok-free.app";
+const baseUrl = "https://c419-115-96-217-84.ngrok-free.app";
 late String endPoint;
 final AppStore store = Modular.get<AppStore>();
 
@@ -297,6 +299,49 @@ class DashServices {
       logger.i("Success + ${response.body}");
       List<dynamic> jsonList = jsonDecode(response.body);
       return jsonList.map((e) => Medicine.fromJson(e)).toList();
+    }
+
+    throw Exception("Failed to load symptoms");
+  }
+
+  Future<void> postMenstrual(Map<String, dynamic> track) async {
+    endPoint = "/menstrual";
+    final url = "$baseUrl$endPoint";
+    logger.d(Uri.parse(url));
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(track),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      logger.i("Success + ${response.body}");
+      return;
+    }
+
+    throw Exception("Failed to post mood tracking data");
+  }
+
+  Future<List<Menstrual>> getMenstrual(
+      String id, String month, String year) async {
+    endPoint = "/menstrual?userId=$id&month=$month&year=$year";
+    final url = "$baseUrl$endPoint";
+    logger.d(Uri.parse(url));
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      logger.i("Success + ${response.body}");
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return jsonList.map((e) => Menstrual.fromJson(e)).toList();
     }
 
     throw Exception("Failed to load symptoms");

@@ -12,6 +12,8 @@ import '../../../store/app_store.dart';
 import '../../../utils/logger.dart';
 import '../services/dash_services.dart';
 
+final kToday = DateTime.now();
+
 class GratitudeScreen extends StatefulWidget {
   const GratitudeScreen({super.key});
 
@@ -23,6 +25,7 @@ class GratitudeScreen extends StatefulWidget {
 }
 
 class _GratitudeScreenState extends State<GratitudeScreen> {
+  final kDay = DateTime(kToday.year, kToday.month, kToday.day);
   final TextEditingController _medicineController = TextEditingController();
   final TextEditingController _dosageController = TextEditingController();
   final AppStore store = Modular.get<AppStore>();
@@ -98,15 +101,7 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
     return Scaffold(
       backgroundColor: R.colors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(
-            Icons.settings_outlined,
-            size: 30,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false,
         backgroundColor: R.colors.bgPrimary,
         foregroundColor: R.colors.black,
       ),
@@ -291,22 +286,24 @@ class _GratitudeScreenState extends State<GratitudeScreen> {
                                 },
                               ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0),
-                    child: CustomButton(
-                      goTo: _addMedicine,
-                      elevation: 0,
-                      rounded: 50,
-                      buttonText: "Add Medicine",
-                      buttonWidth: double.infinity,
-                      buttonColor: R.colors.bgPrimary,
-                      textStyle: GoogleFonts.inter(
-                        fontSize: 16,
-                        color: R.colors.black,
-                        fontWeight: FontWeight.w700,
+                  if (store.selectedDate ==
+                      DateFormat('yyyy-MM-dd').format(kDay))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: CustomButton(
+                        goTo: _addMedicine,
+                        elevation: 0,
+                        rounded: 50,
+                        buttonText: "Add Medicine",
+                        buttonWidth: double.infinity,
+                        buttonColor: R.colors.bgPrimary,
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: R.colors.black,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,7 +13,6 @@ import 'package:wellcare/modules/dashboard/screens/sleep_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/symptoms_screen.dart';
 import 'package:wellcare/modules/dashboard/widget/custom_card.dart';
 import 'package:wellcare/resources/r.dart';
-import 'package:wellcare/utils/logger.dart';
 import 'package:wellcare/widgets/custom_button.dart';
 
 import '../../../store/app_store.dart';
@@ -282,35 +280,37 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                     ),
-                    CustomButton(
-                      elevation: 0,
-                      rounded: 50,
-                      buttonText: "Done",
-                      buttonWidth: double.infinity,
-                      buttonColor: R.colors.bgPrimary,
-                      textStyle: GoogleFonts.inter(
-                        fontSize: 16,
-                        color: R.colors.black,
-                        fontWeight: FontWeight.w700,
+                    if (store.selectedDate ==
+                        DateFormat('yyyy-MM-dd').format(kDay))
+                      CustomButton(
+                        elevation: 0,
+                        rounded: 50,
+                        buttonText: "Done",
+                        buttonWidth: double.infinity,
+                        buttonColor: R.colors.bgPrimary,
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: R.colors.black,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        goTo: () async {
+                          var body = {
+                            "value": _selectedMoodIndex,
+                            "moods": selectedMood.entries
+                                .where((entry) => entry.value == true)
+                                .map((entry) => entry.key)
+                                .toList(),
+                            "date": DateFormat('yyyy-MM-dd').format(kDay),
+                            'user': store.user.id
+                          };
+                          await apiServices.postMoodTrack(body);
+                          Navigator.pop(context);
+                        },
+                        // onPressed: () {
+                        //   // Save the selected mood and tags
+                        //   Navigator.pop(context);
+                        // },
                       ),
-                      goTo: () async {
-                        var body = {
-                          "value": _selectedMoodIndex,
-                          "moods": selectedMood.entries
-                              .where((entry) => entry.value == true)
-                              .map((entry) => entry.key)
-                              .toList(),
-                          "date": DateFormat('yyyy-MM-dd').format(kDay),
-                          'user': store.user.id
-                        };
-                        await apiServices.postMoodTrack(body);
-                        Navigator.pop(context);
-                      },
-                      // onPressed: () {
-                      //   // Save the selected mood and tags
-                      //   Navigator.pop(context);
-                      // },
-                    ),
                   ],
                 ),
               ),
@@ -329,15 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: R.colors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(
-            Icons.settings_outlined,
-            size: 30,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false,
         backgroundColor: R.colors.bgPrimary,
         foregroundColor: R.colors.black,
       ),
@@ -452,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         child: const CustomCard(
                           cardEmoji: "✨",
-                          cardTitle: "Gratitude",
+                          cardTitle: "Medicine",
                         ),
                       ),
                       GestureDetector(

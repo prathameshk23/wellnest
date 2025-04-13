@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -7,7 +5,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:wellcare/modules/auth/screens/login_signup_screen.dart';
 import 'package:wellcare/modules/dashboard/screens/home_screen.dart';
 import 'package:wellcare/resources/r.dart';
 import 'package:wellcare/widgets/custom_button.dart';
@@ -33,6 +30,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final kLastDay = DateTime(kToday.year, kToday.month, kToday.day);
   DateTime _focusedDay = kToday;
   DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    setState(() {
+      store.selectedDate = DateFormat('yyyy-MM-dd').format(kToday);
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -46,15 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: R.colors.white,
         appBar: AppBar(
           title: Text("Welcome ${store.user.name}"),
-          leading: IconButton(
-            icon: const Icon(
-              Icons.settings_outlined,
-              size: 30,
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+          automaticallyImplyLeading: false,
           backgroundColor: R.colors.bgPrimary,
           foregroundColor: R.colors.black,
         ),
@@ -94,36 +92,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: R.colors.black,
                             ),
                           ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  Icons.chevron_left,
-                                  size: 30,
-                                  color: R.colors.blue300,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _focusedDay = DateTime(_focusedDay.year,
-                                        _focusedDay.month - 1);
-                                  });
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.chevron_right,
-                                  size: 30,
-                                  color: R.colors.blue300,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _focusedDay = DateTime(_focusedDay.year,
-                                        _focusedDay.month + 1);
-                                  });
-                                },
-                              ),
-                            ],
-                          )
                         ],
                       ),
                       const SizedBox(height: 10),

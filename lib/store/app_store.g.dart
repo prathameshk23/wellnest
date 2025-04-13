@@ -230,6 +230,22 @@ mixin _$AppStore on _AppStore, Store {
     });
   }
 
+  late final _$menstrualDatesAtom =
+      Atom(name: '_AppStore.menstrualDates', context: context);
+
+  @override
+  List<String> get menstrualDates {
+    _$menstrualDatesAtom.reportRead();
+    return super.menstrualDates;
+  }
+
+  @override
+  set menstrualDates(List<String> value) {
+    _$menstrualDatesAtom.reportWrite(value, super.menstrualDates, () {
+      super.menstrualDates = value;
+    });
+  }
+
   @override
   String toString() {
     return '''
@@ -246,7 +262,8 @@ healthStatus: ${healthStatus},
 symptoms: ${symptoms},
 panda: ${panda},
 user: ${user},
-selectedDate: ${selectedDate}
+selectedDate: ${selectedDate},
+menstrualDates: ${menstrualDates}
     ''';
   }
 }

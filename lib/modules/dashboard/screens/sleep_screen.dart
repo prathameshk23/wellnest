@@ -66,15 +66,7 @@ class _SleepScreenState extends State<SleepScreen> {
     return Scaffold(
       backgroundColor: R.colors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(
-            Icons.settings_outlined,
-            size: 30,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false,
         backgroundColor: R.colors.bgPrimary,
         foregroundColor: R.colors.black,
       ),
